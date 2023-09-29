@@ -25,7 +25,7 @@ interface Cookie {
  * @returns An object with the cookie name, value, and options.
  */
 export const deserialize = (setCookieHeader: string): Cookie => {
-	const cookieRegex = /^([^=]+)=([^;]+);(?:\s*(.*))?$/;
+	const cookieRegex = /^([^=]+)=([^;]+);\s*(.*)$/;
 	const match = setCookieHeader.match(cookieRegex);
 
 	if (!match) {
@@ -68,9 +68,6 @@ export const deserialize = (setCookieHeader: string): Cookie => {
 				case "samesite":
 					options.sameSite = optionValue as "Strict" | "Lax" | "None";
 					break;
-				default:
-					// Unknown option, store as-is
-					options[optionName] = optionValue;
 			}
 		}
 	}
@@ -116,13 +113,6 @@ export const serialize = ({ name, value, options }: Cookie): string => {
 		}
 		if (options.sameSite) {
 			parts.push(`SameSite=${options.sameSite}`);
-		}
-	}
-
-	// Add any other custom options to the header
-	for (const key in options) {
-		if (options[key] && !parts.includes(key) && options[key] !== undefined) {
-			parts.push(`${key}=${options[key]}`);
 		}
 	}
 

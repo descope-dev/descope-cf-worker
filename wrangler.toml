@@ -7,4 +7,5 @@ compatibility_date = "2023-09-22"
 # Docs: https://developers.cloudflare.com/workers/platform/environment-variables
 [vars]
 DESCOPE_BASE_URL = "https://api.descope.com"
-
+DESCOPE_SESSION_COOKIE = "DS"
+DESCOPE_SESSION_REFRESH_COOKIE = "DSR"

@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`worker should alter descope cookie domain 1`] = `
+Headers {
+  Symbol(headers list): HeadersList {
+    "cookies": [
+      "DS=1234; Expires=1234; Domain=auth.example.com; Path=/; Secure; HttpOnly; SameSite=Strict",
+      "DSR=1234; Expires=1234; Domain=auth.example.com; Path=/; Secure; HttpOnly; SameSite=Strict",
+      "DO_NOT_MODIFY=1234; Expires=1234; Domain=api.descope.com; Path=/; Secure; HttpOnly; SameSite=Strict",
+    ],
+    Symbol(headers map): Map {
+      "do_not_modify" => {
+        "name": "do_not_modify",
+        "value": "DO_NOT_MODIFY",
+      },
+      "set-cookie" => {
+        "name": "set-cookie",
+        "value": "DS=1234; Expires=1234; Domain=auth.example.com; Path=/; Secure; HttpOnly; SameSite=Strict, DSR=1234; Expires=1234; Domain=auth.example.com; Path=/; Secure; HttpOnly; SameSite=Strict, DO_NOT_MODIFY=1234; Expires=1234; Domain=api.descope.com; Path=/; Secure; HttpOnly; SameSite=Strict",
+      },
+    },
+    Symbol(headers map sorted): null,
+  },
+  Symbol(guard): "none",
+  Symbol(realm): {
+    "settingsObject": {},
+  },
+}
+`;
