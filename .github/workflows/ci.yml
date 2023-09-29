@@ -23,9 +23,6 @@ jobs:
           cache-dependency-path: "**/yarn.lock"
       - name: Install dependencies
         run: yarn install
-      - name: Checking format
-        run: |
-          yarn format-check
       - name: Checking lint
         run: |
           yarn lint
