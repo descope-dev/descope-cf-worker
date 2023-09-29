@@ -1,8 +1,5 @@
 import { deserialize, serialize } from "./cookieParser";
 
-const DESCOPE_SESSION_COOKIE = "DS";
-const DESCOPE_SESION_REFRESH_COOKIE = "DSR";
-
 /* istanbul ignore next */
 export default {
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -18,19 +15,25 @@ export const handleRequest = async (request: Request, env: Env) => {
 	const res = await fetch(descopeUrl, request);
 	const updatedHeaders = new Headers(
 		res.headers
-			.getAll("Set-Cookie")
+			.getAll("set-cookie")
 			.map(deserialize)
 			.map((cookie) => {
 				if (
-					cookie.name === DESCOPE_SESSION_COOKIE ||
-					cookie.name === DESCOPE_SESION_REFRESH_COOKIE
+					cookie.name === env.DESCOPE_SESSION_COOKIE ||
+					cookie.name === env.DESCOPE_SESION_REFRESH_COOKIE
 				) {
 					cookie.options = cookie.options || {};
 					cookie.options.domain = url.hostname;
 				}
-				return ["Set-Cookie", serialize(cookie)];
+				return ["set-cookie", serialize(cookie)];
 			}),
 	);
 
-	return new Response(res.body, { ...res, headers: updatedHeaders });
+	res.headers.forEach((value, key) => {
+		if (key != "set-cookie") updatedHeaders.set(key, value);
+	});
+	return new Response(res.body, {
+		...res,
+		headers: updatedHeaders,
+	});
 };

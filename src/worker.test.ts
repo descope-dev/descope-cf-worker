@@ -1,63 +1,71 @@
-import { CookieOptions, deserialize, serialize } from "./cookieParser";
+import { CookieOptions, serialize } from "./cookieParser";
 import { handleRequest } from "./worker";
 
-describe("fetch", () => {
-	it("should fetch data from the server", async () => {
-		const DESCOPE_SESSION_COOKIE = "DS";
-		const DESCOPE_SESION_REFRESH_COOKIE = "DSR";
+const env = {
+	DESCOPE_BASE_URL: "https://api.descope.com",
+	DESCOPE_SESSION_COOKIE: "DS",
+	DESCOPE_SESION_REFRESH_COOKIE: "DSR",
+};
 
-		const testUrl = new URL("https://httpbin.org/response-headers");
+describe("worker", () => {
+	beforeEach(() => {
+		const fetchMock = getMiniflareFetchMock();
+		fetchMock.disableNetConnect();
+
+		const DO_NOT_MODIFY = "DO_NOT_MODIFY";
 		const value = "1234";
 		const options: CookieOptions = {
-			domain: "api.descope.com",
-			expires: Date.now().toString(),
+			domain: new URL(env.DESCOPE_BASE_URL).hostname,
+			expires: "1234",
 			path: "/",
 			secure: true,
 			httpOnly: true,
 			sameSite: "Strict",
 		};
 
-		const DO_NOT_MODIFY = "DO_NOT_MODIFY";
+		fetchMock
+			.get(env.DESCOPE_BASE_URL)
+			.intercept({ path: "/" })
+			.reply(200, "OK", {
+				headers: {
+					[DO_NOT_MODIFY]: DO_NOT_MODIFY,
+					"Set-Cookie": [
+						serialize({ name: env.DESCOPE_SESSION_COOKIE, value, options }),
+						serialize({ name: env.DESCOPE_SESION_REFRESH_COOKIE, value, options }),
+						serialize({ name: DO_NOT_MODIFY, value, options }),
+					],
+				},
+			});
+	});
 
-		testUrl.searchParams.append(
-			"Set-Cookie",
-			serialize({ name: DESCOPE_SESSION_COOKIE, value, options }),
-		);
-		testUrl.searchParams.append(
-			"Set-Cookie",
-			serialize({ name: DESCOPE_SESION_REFRESH_COOKIE, value, options }),
-		);
-		testUrl.searchParams.append(
-			"Set-Cookie",
-			serialize({ name: DO_NOT_MODIFY, value, options }),
-		);
-		testUrl.searchParams.append(DO_NOT_MODIFY, DO_NOT_MODIFY);
-
-		const env: Env = {
-			DESCOPE_BASE_URL: testUrl.href,
-		};
-
-		const origin = "auth.example.com";
-		const url = `https://${origin}/`;
-
+	it("should alter descope cookie domain", async () => {
+		const url = new URL(`https://auth.example.com/`);
 		const response = await handleRequest(new Request(url), env);
+		expect(response.headers).toMatchSnapshot();
+	});
 
-		response.headers.forEach((value, name) => {
-			if (name === "Set-Cookie") {
-				const cookie = deserialize(value);
-				if (
-					cookie.name === DESCOPE_SESSION_COOKIE ||
-					cookie.name == DESCOPE_SESION_REFRESH_COOKIE
-				)
-					// DS/DSR cookies should have their domain set to the origin
-					expect(cookie.options).toMatchObject({ ...options, domain: origin });
-				else {
-					// other cookies should have their domain unchanged
-					expect(cookie.options).toMatchObject(options);
-				}
-			}
-			// other headers should be passed through
-			if (name === DO_NOT_MODIFY) expect(value).toBe(DO_NOT_MODIFY);
+	it("should not alter response body", async () => {
+		const url = new URL(`https://auth.example.com/`);
+		const response = await handleRequest(new Request(url), env);
+		expect(await response.text()).toBe("OK");
+	});
+
+	it("should work with all request methods", async () => {
+		const fetchMock = getMiniflareFetchMock();
+
+		const url = new URL(`https://auth.example.com/`);
+		const methods = ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"];
+		methods.forEach((method) =>
+			fetchMock
+				.get(env.DESCOPE_BASE_URL)
+				.intercept({ path: "/", method })
+				.reply(200, "OK"),
+		);
+		const responses = await Promise.all(
+			methods.map((method) => handleRequest(new Request(url, { method }), env)),
+		);
+		responses.forEach((response) => {
+			expect(response.status).toBe(200);
 		});
 	});
 });
