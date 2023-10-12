@@ -9,6 +9,10 @@ Headers {
       "DO_NOT_MODIFY=1234; Expires=1234; Domain=api.descope.com; Path=/; Secure; HttpOnly; SameSite=Strict",
     ],
     Symbol(headers map): Map {
+      "access-control-allow-origin" => {
+        "name": "access-control-allow-origin",
+        "value": "auth.example.com",
+      },
       "do_not_modify" => {
         "name": "do_not_modify",
         "value": "DO_NOT_MODIFY",
