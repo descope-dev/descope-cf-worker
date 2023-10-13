@@ -13,27 +13,25 @@ export const handleRequest = async (request: Request, env: Env) => {
 	const url = new URL(request.url);
 
 	const res = await fetch(descopeUrl, request);
-	const updatedHeaders = new Headers(
-		res.headers
-			.getAll("set-cookie")
-			.map(deserialize)
-			.map((cookie) => {
-				if (
-					cookie.name === env.DESCOPE_SESSION_COOKIE ||
-					cookie.name === env.DESCOPE_SESION_REFRESH_COOKIE
-				) {
-					cookie.options = cookie.options || {};
-					cookie.options.domain = url.hostname;
-				}
-				return ["set-cookie", serialize(cookie)];
-			}),
-	);
-
-	res.headers.forEach((value, key) => {
-		if (key != "set-cookie") updatedHeaders.set(key, value);
+	const headers = new Headers(res.headers);
+	const cookies = headers.getAll("set-cookie");
+	headers.delete("set-cookie");
+	cookies.forEach((value) => {
+		const cookie = deserialize(value);
+		switch (cookie.name) {
+			case env.DESCOPE_SESSION_COOKIE:
+			case env.DESCOPE_SESION_REFRESH_COOKIE:
+				if (cookie.options) cookie.options.domain = url.hostname;
+		}
+		value = serialize(cookie);
+		headers.append("set-cookie", value);
 	});
+	const cors = headers.get("access-control-allow-origin");
+	if (cors && cors !== "*") {
+		headers.set("access-control-allow-origin", url.hostname);
+	}
 	return new Response(res.body, {
 		...res,
-		headers: updatedHeaders,
+		headers,
 	});
 };
