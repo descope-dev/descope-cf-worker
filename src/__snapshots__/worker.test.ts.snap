@@ -9,17 +9,25 @@ Headers {
       "DO_NOT_MODIFY=1234; Expires=1234; Domain=api.descope.com; Path=/; Secure; HttpOnly; SameSite=Strict",
     ],
     Symbol(headers map): Map {
-      "access-control-allow-origin" => {
-        "name": "access-control-allow-origin",
-        "value": "auth.example.com",
-      },
       "do_not_modify" => {
         "name": "do_not_modify",
         "value": "DO_NOT_MODIFY",
       },
+      "origin" => {
+        "name": "origin",
+        "value": "https://auth.example.com",
+      },
       "set-cookie" => {
         "name": "set-cookie",
         "value": "DS=1234; Expires=1234; Domain=auth.example.com; Path=/; Secure; HttpOnly; SameSite=Strict, DSR=1234; Expires=1234; Domain=auth.example.com; Path=/; Secure; HttpOnly; SameSite=Strict, DO_NOT_MODIFY=1234; Expires=1234; Domain=api.descope.com; Path=/; Secure; HttpOnly; SameSite=Strict",
+      },
+      "x-descope-worker-proxy-cookie-modified" => {
+        "name": "x-descope-worker-proxy-cookie-modified",
+        "value": "DS, DSR",
+      },
+      "x-descope-worker-proxy-url" => {
+        "name": "x-descope-worker-proxy-url",
+        "value": "https://api.descope.com/v1/refresh",
       },
     },
     Symbol(headers map sorted): null,

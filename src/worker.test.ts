@@ -22,7 +22,7 @@ const options: CookieOptions = {
 	sameSite: "Strict",
 };
 const responseBody = "OK";
-const cors = { "Access-Control-Allow-Origin": new URL(env.DESCOPE_BASE_URL).hostname };
+const url = new URL(`https://auth.example.com/v1/refresh`);
 
 const fetchMock = getMiniflareFetchMock();
 
@@ -34,16 +34,15 @@ describe("worker", () => {
 	it("should alter descope cookie domain", async () => {
 		fetchMock
 			.get(env.DESCOPE_BASE_URL)
-			.intercept({ path: "/" })
+			.intercept({ path: url.pathname })
 			.reply(200, responseBody, {
 				headers: {
 					[DO_NOT_MODIFY]: DO_NOT_MODIFY,
 					"Set-Cookie": cookieNames.map((name) => serialize({ name, value, options })),
-					...cors,
+					origin: url.origin,
 				},
 			});
 
-		const url = new URL(`https://auth.example.com/`);
 		const response = await handleRequest(new Request(url), env);
 		expect(response.headers).toMatchSnapshot();
 		const cookies = response.headers.getAll("Set-Cookie").map(deserialize);
@@ -67,14 +66,13 @@ describe("worker", () => {
 	it("should NOT alter non-descope cookie domain", async () => {
 		fetchMock
 			.get(env.DESCOPE_BASE_URL)
-			.intercept({ path: "/" })
+			.intercept({ path: url.pathname })
 			.reply(200, responseBody, {
 				headers: {
 					"Set-Cookie": serialize({ name: DO_NOT_MODIFY, value, options }),
 				},
 			});
 
-		const url = new URL(`https://auth.example.com/`);
 		const response = await handleRequest(new Request(url), env);
 		const cookie = deserialize(response.headers.get("Set-Cookie") ?? "");
 		expect(cookie.name).toBe(DO_NOT_MODIFY);
@@ -107,29 +105,30 @@ describe("worker", () => {
 	it("should alter cors headers when domain is specified", async () => {
 		fetchMock
 			.get(env.DESCOPE_BASE_URL)
-			.intercept({ path: "/" })
+			.intercept({ path: url.pathname })
 			.reply(200, responseBody, {
 				headers: {
-					"Access-Control-Allow-Origin": new URL(env.DESCOPE_BASE_URL).hostname,
+					"Access-Control-Allow-Origin": new URL(env.DESCOPE_BASE_URL).origin,
 				},
 			});
 
-		const url = new URL(`https://auth.example.com/`);
-		const response = await handleRequest(new Request(url), env);
-		expect(response.headers.get("Access-Control-Allow-Origin")).toBe(url.hostname);
+		const response = await handleRequest(
+			new Request(url, { headers: { origin: url.origin } }),
+			env,
+		);
+		expect(response.headers.get("Access-Control-Allow-Origin")).toBe(url.origin);
 	});
 
 	it("should NOT alter cors headers when domain is not specified", async () => {
 		fetchMock
 			.get(env.DESCOPE_BASE_URL)
-			.intercept({ path: "/" })
+			.intercept({ path: url.pathname })
 			.reply(200, responseBody, {
 				headers: {
 					"Access-Control-Allow-Origin": "*",
 				},
 			});
 
-		const url = new URL(`https://auth.example.com/`);
 		const response = await handleRequest(new Request(url), env);
 		expect(response.headers.get("Access-Control-Allow-Origin")).toBe("*");
 	});
@@ -137,20 +136,34 @@ describe("worker", () => {
 	it("should work with all request methods", async () => {
 		const fetchMock = getMiniflareFetchMock();
 
-		const url = new URL(`https://auth.example.com/`);
 		const methods = ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"];
 		methods.forEach((method) =>
 			fetchMock
 				.get(env.DESCOPE_BASE_URL)
-				.intercept({ path: "/", method })
+				.intercept({ path: url.pathname, method })
 				.reply(200, responseBody),
 		);
 		const responses = await Promise.all(
-			methods.map((method) => handleRequest(new Request(url, { method }), env)),
+			methods.map(
+				async (method) => await handleRequest(new Request(url, { method }), env),
+			),
 		);
 		responses.forEach((response) => {
 			expect(response.status).toBe(200);
 		});
+	});
+
+	it("should proxy paths", async () => {
+		const fetchMock = getMiniflareFetchMock();
+
+		const url = new URL(`https://auth.example.com/v1/test?a=b`);
+		fetchMock
+			.get(env.DESCOPE_BASE_URL)
+			.intercept({ path: "/v1/test?a=b" })
+			.reply(200, responseBody);
+
+		const response = await handleRequest(new Request(url), env);
+		expect(response.status).toBe(200);
 	});
 
 	it("should test all mocked requests", async () => {
