@@ -1,4 +1,4 @@
-<img width="1400" alt="cloudflare worker github repo banner" src="">
+<img width="1400" alt="cloudflare worker github repo banner" src="https://github.com/descope-dev/descope-cf-worker/assets/32936811/db891324-d389-41ce-bb02-a570a6f0cc60">
 
 ---
 
