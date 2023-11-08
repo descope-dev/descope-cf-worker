@@ -4,6 +4,8 @@
 
 # Cloudflare Worker Sample App
 
+Although typically one custom domain is set per [Descope Project](https://docs.descope.com/customize/project/), if you want to use multiple custom domains with multiple different apps, you can use [Cloudflare Workers](https://developers.cloudflare.com/workers/) to do this for you. You can also use a cloudflare worker to help you configure custom domains for each B2B tenant, all using one singular project.
+
 This sample app is built to be deployed as a Cloudflare Worker, utilizing Cloudflare's edge computing capabilities to run serverless code. It is important to ensure that you have configured your Cloudflare account and domain correctly before proceeding with the installation and deployment of this worker.
 
 If you want to learn more about Cloudflare Workers and how this sample app works behind the scenes, you can read our [published blog](https://www.descope.com/blog/post/session-management-cloudflare-workers) about Descope and Cloudflare Workers.
