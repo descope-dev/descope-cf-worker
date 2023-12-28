@@ -33,7 +33,7 @@
 		"wrangler": "^3.10.1"
 	},
 	"overrides": {
-		"typescript": "<5.2.0"
+		"typescript": "<5.3.4"
 	},
 	"engines": {
 		"node": ">=18"
